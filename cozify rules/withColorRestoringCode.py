@@ -45,8 +45,8 @@ class DetectMotionAndChangeLight(Rule):
           command = DeviceCommand(d)
           command.state = LightState()
           command.state.colorMode = 'hs'
-          
-          if command.state.hue == 0.56:
+          timeSinceLastChanged = get_timestamp() - command.state.lastChange
+          if timeSinceLastChanged > 1000:
             command.state.hue = 1.9
             command.state.saturation = 0.7
           else:
@@ -57,12 +57,15 @@ class DetectMotionAndChangeLight(Rule):
           command.state.brightness = 0.7
           self.send_command(command)
 
+    def get_timestamp(self):
+        return self.get_timestamp()
+      
     def on_event(self, ev):
         self.logger.info("on event...")
         """if ev.type != ContactEvent.type:
             return"""
 
-        if ev.state.reachable and ev.state.motion and ev.state.lastDetection >:
+        if ev.state.reachable and ev.state.motion:
             self.sensors_on.add(ev.id)
         else:
             self.sensors_on.discard(ev.id)
