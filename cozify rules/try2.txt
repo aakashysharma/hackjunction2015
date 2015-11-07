@@ -1,0 +1,55 @@
+class OnOffByContact(Rule)
+    type = "ONOFF_CONTACT_RULE"
+    name = "On/off by contact"
+    description = "On/off by door sensors"
+    summary = "This rule allows you to turn a device on or off based on door opening."
+
+    sensors = Input(field_type=None,
+                    capabilities=[Capability.MOTION],
+                    display_order=1,
+                    description="Window/door sensor",
+                    min_count=1)
+    """ @type: list """
+
+    devices = Output(field_type=None,
+                     capabilities=[Capability.COLOR_TEMP],
+                     display_order=2,
+                     description="Controlled devices",
+                     min_count=1)
+    """ @type: list """
+
+    output_state = Value(field_type=Rule.BOOL,
+                         display_order=3,
+                         description="Turn on",
+                         default=True,
+                         min_count=1,
+                         max_count=1)
+    """ @type: list """
+
+    def __init__(self):
+        super().__init__()
+        self.sensors = set()
+        self.turn_on = True
+
+    def enable(self):
+        self.turn_on = self.output_state and self.output_state[0].value
+        for t in self.sensors:
+            self.send_command(ReportStatusCommand(t))
+
+    def send_commands(self, on: bool):
+        for d in self.devices:
+            self.send_command(DeviceOnCommand(d) if on else DeviceOffCommand(d))
+
+    def on_event(self, ev):
+        if ev.type != MotionEvent.type:
+            return
+
+        if ev.state.reachable and ev.state.open:
+            self.sensors.add(ev.id)
+        else:
+            self.sensors.discard(ev.id)
+
+        self.send_commands(len(self.sensors) > 0 if self.turn_on else len(self.sensors) == 0)
+
+    def disable(self):
+        self.sensors = set()
