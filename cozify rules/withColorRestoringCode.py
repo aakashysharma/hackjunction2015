@@ -45,13 +45,14 @@ class DetectMotionAndChangeLight(Rule):
           command = DeviceCommand(d)
           command.state = LightState()
           command.state.colorMode = 'hs'
-          if command.state.lastMotion > 100 :
-            command.state.hue = 0.56
-            command.state.saturation = 0.5
-          else:
+          
+          if command.state.hue == 0.56:
             command.state.hue = 1.9
             command.state.saturation = 0.7
-          
+          else:
+            command.state.hue = 0.56
+            command.state.saturation = 0.5
+            
           command.state.transitionMsec = 1500
           command.state.brightness = 0.7
           self.send_command(command)
@@ -61,7 +62,7 @@ class DetectMotionAndChangeLight(Rule):
         """if ev.type != ContactEvent.type:
             return"""
 
-        if ev.state.reachable and ev.state.motion:
+        if ev.state.reachable and ev.state.motion and ev.state.lastDetection >:
             self.sensors_on.add(ev.id)
         else:
             self.sensors_on.discard(ev.id)
