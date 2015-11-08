@@ -2,11 +2,16 @@ package com.cozify.CoziAmbiance;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.media.AudioManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 import com.google.gson.GsonBuilder;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -28,24 +33,69 @@ public class Main extends Activity {
     /**
      * Called when the activity is first created.
      */
+    public static final String SERVICECMD = "com.android.music.musicservicecommand";
+    public static final String CMDNAME = "command";
+    public static final String CMDTOGGLEPAUSE = "togglepause";
+    public static final String CMDSTOP = "stop";
+    public static final String CMDPAUSE = "pause";
+    public static final String CMDPREVIOUS = "previous";
+    public static final String CMDNEXT = "next";
+    /** Called when the activity is first created. */
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+        IntentFilter iF = new IntentFilter();
+        iF.addAction("com.android.music.metachanged");
+        iF.addAction("com.android.music.playstatechanged");
+        iF.addAction("fm.last.android.metachanged");
+        iF.addAction("fm.last.android.playbackpaused");
+        iF.addAction("com.sec.android.app.music.metachanged");
+        iF.addAction("com.nullsoft.winamp.metachanged");
+        iF.addAction("com.nullsoft.winamp.playstatechanged");
+        iF.addAction("com.amazon.mp3.metachanged");
+        iF.addAction("com.amazon.mp3.playstatechanged");
+        iF.addAction("com.miui.player.metachanged");
+        iF.addAction("com.miui.player.playstatechanged");
+        iF.addAction("com.real.IMP.metachanged");
+        iF.addAction("com.real.IMP.playstatechanged");
+        iF.addAction("com.sonyericsson.music.metachanged");
+        iF.addAction("com.sonyericsson.music.playstatechanged");
+        iF.addAction("com.rdio.android.metachanged");
+        iF.addAction("com.rdio.android.playstatechanged");
+        iF.addAction("com.samsung.sec.android.MusicPlayer.metachanged");
+        iF.addAction("com.samsung.sec.android.MusicPlayer.playstatechanged");
+        iF.addAction("com.andrew.apollo.metachanged");
+        iF.addAction("com.andrew.apollo.playstatechanged");
+        iF.addAction("com.htc.music.metachanged");
+        iF.addAction("com.htc.music.playstatechanged");
+        iF.addAction("com.spotify.music.playbackstatechanged");
+        iF.addAction("com.spotify.music.metadatachanged");
+        iF.addAction("com.rhapsody.playstatechanged");
 
-        final Button btnSearch = (Button) findViewById(R.id.buttonPost);
-        ArrayList<String> passing = new ArrayList<String>();
-        passing.add("homebox56465");
-        passing.add("pop");
-        btnSearch.setOnClickListener(new Button.OnClickListener() {
-            public void onClick(View v) {
-                PushAsyncTask push = new PushAsyncTask();
-                push.execute(passing);
-            }
-        });
+        registerReceiver(mReceiver, iF);
+//        ArrayList<String> passing = new ArrayList<String>();
+//        passing.add("removeMoodLights");
+//        passing.add("homebox56465");
+//        PushAsyncTask push = new PushAsyncTask();
+//        push.execute(passing);
 
     } // end onCreate()
+    private BroadcastReceiver mReceiver = new BroadcastReceiver() {
 
+        @Override
+        public void onReceive(Context context, Intent intent)
+        {
+            String action = intent.getAction();
+            String cmd = intent.getStringExtra("command");
+            Log.d("mIntentReceiver.onReceive ", action + " / " + cmd);
+            String artist = intent.getStringExtra("artist");
+            String album = intent.getStringExtra("album");
+            String track = intent.getStringExtra("track");
+            Log.d("Music",artist+":"+album+":"+track);
+        }
+    };
     private class PushAsyncTask extends AsyncTask<ArrayList<String>, Void, ArrayList<String>> {
 
         protected ProgressDialog progressDialog = new ProgressDialog(Main.this);
@@ -57,7 +107,7 @@ public class Main extends Activity {
 
         @Override
         protected ArrayList<String> doInBackground(ArrayList<String>... passing) {
-            String url_select = "https://api.parse.com/1/functions/setMoodLights";
+            String url_select = "https://api.parse.com/1/functions/" + passing[0].get(0);
 
             try {
                 // Set up HTTP post
@@ -69,8 +119,7 @@ public class Main extends Activity {
                 httpPost.setHeader("X-Parse-REST-API-Key", "E9xTCvv1sGnE90p2JDlRHueVZFXQ809mg5Nt8a5C");
                 httpPost.setHeader("Content-type", "application/json");
                 Map<String, String> comment = new HashMap<String, String>();
-                comment.put("DeviceID", passing[0].get(0));
-                comment.put("MusicGenre", passing[0].get(1));
+                comment.put("DeviceID", passing[0].get(1));
                 String json = new GsonBuilder().create().toJson(comment, Map.class);
                 httpPost.setEntity(new StringEntity(json, "UTF8"));
                 HttpResponse httpResponse = httpClient.execute(httpPost);
